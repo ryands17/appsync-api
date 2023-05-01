@@ -55,7 +55,7 @@ export function API({ stack }: StackContext) {
     authFlows: { userPassword: true },
     enableTokenRevocation: true,
     oAuth: {
-      scopes: [cognito.OAuthScope.custom(api.url + '/read:hello')],
+      scopes: [cognito.OAuthScope.custom(api.url + '/read:all')],
       flows: { clientCredentials: true },
     },
   });
