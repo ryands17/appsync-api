@@ -1,0 +1,28 @@
+{
+  "name": "appsync-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "sst dev",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "destroy": "sst remove",
+    "console": "sst console",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "aws-cdk-lib": "2.72.1",
+    "constructs": "10.1.156",
+    "prettier": "2.8.8",
+    "sst": "^2.7.2",
+    "typescript": "^5.0.4"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "prettier": {
+    "singleQuote": true
+  }
+}
