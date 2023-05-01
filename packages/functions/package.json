@@ -10,5 +10,9 @@
     "@types/aws-lambda": "^8.10.114",
     "@types/node": "^18.16.3",
     "sst": "^2.7.2"
+  },
+  "dependencies": {
+    "graphql-request": "^6.0.0",
+    "node-fetch": "^3.3.1"
   }
 }
