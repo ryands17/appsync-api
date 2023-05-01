@@ -9,6 +9,12 @@ export default {
     };
   },
   stacks(app) {
+    app.setDefaultFunctionProps({
+      runtime: 'nodejs16.x',
+      memorySize: 512,
+      timeout: '10 seconds',
+    });
+
     app.stack(API);
   },
 } satisfies SSTConfig;
