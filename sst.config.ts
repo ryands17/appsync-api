@@ -13,6 +13,7 @@ export default {
       runtime: 'nodejs16.x',
       memorySize: 512,
       timeout: '10 seconds',
+      architecture: 'arm_64',
     });
 
     app.stack(API);

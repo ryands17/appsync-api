@@ -1,6 +1,7 @@
-import { StackContext, AppSyncApi, Function, Config } from 'sst/constructs';
+import { StackContext, AppSyncApi, Config } from 'sst/constructs';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as appSync from 'aws-cdk-lib/aws-appsync';
+import * as libs from './libs';
 
 export function API({ stack }: StackContext) {
   const apiUserPool = new cognito.UserPool(stack, 'ApiUserPool');
@@ -8,7 +9,10 @@ export function API({ stack }: StackContext) {
   const api = new AppSyncApi(stack, 'GraphqlApi', {
     schema: 'packages/core/src/schema.graphql',
     dataSources: {
-      lambdaDs: 'packages/functions/src/lambda.handler',
+      lambdaDs: {
+        type: 'function',
+        function: libs.createLambda(stack, 'lambdaDs'),
+      },
     },
     resolvers: {
       'Query hello': 'lambdaDs',
@@ -24,6 +28,8 @@ export function API({ stack }: StackContext) {
       },
     },
   });
+
+  libs.createAppSyncLogGroup(stack, 'graphQLAPI', api.apiId);
 
   const userPoolDomain = apiUserPool.addDomain('default', {
     cognitoDomain: { domainPrefix: 'appsync-api' },
@@ -59,10 +65,8 @@ export function API({ stack }: StackContext) {
   });
   const clientSecret = new Config.Secret(stack, 'clientSecret');
 
-  new Function(stack, 'queryHello', {
-    handler: 'packages/functions/src/query.handler',
-    bind: [userPoolDomainName, apiUrl, clientId, clientSecret],
-  });
+  const queryHello = libs.createLambda(stack, 'queryHello');
+  queryHello.bind([userPoolDomainName, apiUrl, clientId, clientSecret]);
 
   stack.addOutputs({
     ApiEndpoint: api.url,
