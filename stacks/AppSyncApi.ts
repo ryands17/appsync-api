@@ -4,7 +4,9 @@ import * as appSync from 'aws-cdk-lib/aws-appsync';
 import * as libs from './libs';
 
 export function API({ stack }: StackContext) {
-  const apiUserPool = new cognito.UserPool(stack, 'ApiUserPool');
+  const apiUserPool = new cognito.UserPool(stack, 'ApiUserPool', {
+    removalPolicy: libs.setRemovalPolicy(),
+  });
 
   const api = new AppSyncApi(stack, 'GraphqlApi', {
     schema: 'packages/core/src/schema.graphql',
@@ -52,7 +54,7 @@ export function API({ stack }: StackContext) {
   const mainClient = apiUserPool.addClient('main', {
     userPoolClientName: 'main',
     generateSecret: true,
-    authFlows: { userPassword: true },
+    authFlows: { userPassword: true, adminUserPassword: true },
     enableTokenRevocation: true,
     oAuth: {
       scopes: [cognito.OAuthScope.custom(api.url + '/read:all')],

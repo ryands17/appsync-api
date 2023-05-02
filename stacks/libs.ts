@@ -3,6 +3,10 @@ import { Function } from 'sst/constructs';
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
+export function setRemovalPolicy() {
+  return RemovalPolicy.DESTROY;
+}
+
 export function createLambda(stack: Construct, name: string) {
   const fn = new Function(stack, name, {
     handler: `packages/functions/src/${name}.handler`,
@@ -11,7 +15,7 @@ export function createLambda(stack: Construct, name: string) {
   new logs.LogGroup(stack, `${name}Logs`, {
     logGroupName: `/aws/lambda/${fn.functionName}`,
     retention: logs.RetentionDays.ONE_WEEK,
-    removalPolicy: RemovalPolicy.DESTROY,
+    removalPolicy: setRemovalPolicy(),
   });
 
   return fn;
@@ -25,6 +29,6 @@ export function createAppSyncLogGroup(
   new logs.LogGroup(stack, `${name}Logs`, {
     logGroupName: `/aws/appsync/apis/${apiId}`,
     retention: logs.RetentionDays.ONE_WEEK,
-    removalPolicy: RemovalPolicy.DESTROY,
+    removalPolicy: setRemovalPolicy(),
   });
 }
