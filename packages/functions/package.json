@@ -12,6 +12,7 @@
     "sst": "^2.7.2"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.328.0",
     "graphql-request": "^6.0.0",
     "node-fetch": "^3.3.1"
   }

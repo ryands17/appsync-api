@@ -1,23 +1,38 @@
-import { StackContext, AppSyncApi, Config } from 'sst/constructs';
+import * as sst from 'sst/constructs';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as appSync from 'aws-cdk-lib/aws-appsync';
 import * as libs from './libs';
 
-export function API({ stack }: StackContext) {
+export function API({ stack }: sst.StackContext) {
   const apiUserPool = new cognito.UserPool(stack, 'ApiUserPool', {
     removalPolicy: libs.setRemovalPolicy(),
   });
 
-  const api = new AppSyncApi(stack, 'GraphqlApi', {
+  const table = new sst.Table(stack, 'system', {
+    fields: { pk: 'string', sk: 'string' },
+    primaryIndex: { partitionKey: 'pk', sortKey: 'sk' },
+    cdk: { table: { removalPolicy: libs.setRemovalPolicy() } },
+  });
+
+  const tableName = new sst.Config.Parameter(stack, 'tableName', {
+    value: table.tableName,
+  });
+
+  const lambdaDs = libs.createLambda(stack, 'lambdaDs');
+  lambdaDs.bind([tableName, table]);
+
+  const api = new sst.AppSyncApi(stack, 'GraphqlApi', {
     schema: 'packages/core/src/schema.graphql',
     dataSources: {
       lambdaDs: {
         type: 'function',
-        function: libs.createLambda(stack, 'lambdaDs'),
+        function: lambdaDs,
       },
     },
     resolvers: {
       'Query hello': 'lambdaDs',
+      'Query user': 'lambdaDs',
+      'Mutation addRoleToUser': 'lambdaDs',
     },
     cdk: {
       graphqlApi: {
@@ -31,25 +46,30 @@ export function API({ stack }: StackContext) {
     },
   });
 
+  api.bind([table]);
+
   libs.createAppSyncLogGroup(stack, 'graphQLAPI', api.apiId);
 
   const userPoolDomain = apiUserPool.addDomain('default', {
     cognitoDomain: { domainPrefix: 'appsync-api' },
   });
 
-  const userPoolDomainName = new Config.Parameter(stack, 'domainName', {
+  const userPoolDomainName = new sst.Config.Parameter(stack, 'domainName', {
     value: userPoolDomain.domainName,
   });
 
-  const apiUrl = new Config.Parameter(stack, 'apiUrl', {
+  const apiUrl = new sst.Config.Parameter(stack, 'apiUrl', {
     value: api.url,
   });
 
-  apiUserPool.addResourceServer('appSyncResourceServer', {
-    userPoolResourceServerName: 'appsync',
-    identifier: api.url,
-    scopes: [{ scopeName: 'read:all', scopeDescription: 'Read all data' }],
-  });
+  const resourceServer = apiUserPool.addResourceServer(
+    'appSyncResourceServer',
+    {
+      userPoolResourceServerName: 'appsync',
+      identifier: api.url,
+      scopes: [{ scopeName: 'read:all', scopeDescription: 'Read all data' }],
+    }
+  );
 
   const mainClient = apiUserPool.addClient('main', {
     userPoolClientName: 'main',
@@ -62,13 +82,22 @@ export function API({ stack }: StackContext) {
     },
   });
 
-  const clientId = new Config.Parameter(stack, 'clientId', {
+  mainClient.node.addDependency(resourceServer);
+
+  const clientId = new sst.Config.Parameter(stack, 'clientId', {
     value: mainClient.userPoolClientId,
   });
-  const clientSecret = new Config.Secret(stack, 'clientSecret');
+  const clientSecret = new sst.Config.Secret(stack, 'clientSecret');
 
   const queryHello = libs.createLambda(stack, 'queryHello');
-  queryHello.bind([userPoolDomainName, apiUrl, clientId, clientSecret]);
+  queryHello.bind([
+    userPoolDomainName,
+    apiUrl,
+    clientId,
+    clientSecret,
+    table,
+    tableName,
+  ]);
 
   stack.addOutputs({
     ApiEndpoint: api.url,

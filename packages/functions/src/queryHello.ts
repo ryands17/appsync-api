@@ -1,3 +1,5 @@
+import * as models from '@appsync-api/core/models';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Handler } from 'aws-lambda';
 import { Config } from 'sst/node/config';
 import { gql, GraphQLClient } from 'graphql-request';
@@ -5,6 +7,8 @@ import fetch from 'node-fetch';
 
 const CLIENT_ID = Config.clientId;
 const CLIENT_SECRET = Config.clientSecret;
+
+const client = new DynamoDBClient({});
 
 const auth = `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString(
   'base64'
@@ -37,8 +41,39 @@ export const handler: Handler = async () => {
 
     const data: any = await client.request(query);
 
+    await seedData();
+
     return data.hello;
   } catch (error) {
     console.error(error);
   }
 };
+
+async function seedData() {
+  models.role.setClient(client);
+  models.user.setClient(client);
+
+  await models.role
+    .create({
+      appName: 'my-app',
+      roleName: 'admin',
+      permissions: ['create', 'read', 'update', 'delete'],
+    })
+    .go();
+
+  await models.role
+    .create({
+      appName: 'my-app',
+      roleName: 'user',
+      permissions: ['read'],
+    })
+    .go();
+
+  await models.user
+    .create({ orgName: 'org-1', userId: 'id-1', roles: ['role#admin'] })
+    .go();
+
+  await models.user
+    .create({ orgName: 'org-1', userId: 'id-2', roles: ['role#user'] })
+    .go();
+}

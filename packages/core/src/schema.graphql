@@ -1,3 +1,15 @@
+type User {
+  orgName: String!
+  userId: String!
+  roles: [String]
+  permissions: [String]
+}
+
 type Query {
   hello: String
+  user(orgName: String!, userId: String!): User
+}
+
+type Mutation {
+  addRoleToUser(orgName: String!, userId: String!, role: String!): Boolean
 }
