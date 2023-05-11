@@ -1,11 +1,6 @@
 import { AppSyncResolverHandler } from 'aws-lambda';
 import { Time } from '@appsync-api/core/time';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import * as models from '@appsync-api/core/models';
-
-const client = new DynamoDBClient({});
-models.user.setClient(client);
-models.role.setClient(client);
 
 export const handler: AppSyncResolverHandler<any, any> = async (event) => {
   const { identity } = event;
@@ -19,6 +14,12 @@ export const handler: AppSyncResolverHandler<any, any> = async (event) => {
       return `Hello world. The time is ${Time.now()}`;
     case 'addRoleToUser':
       return await addRoleToUser({
+        userId: event.arguments.userId,
+        orgName: event.arguments.orgName,
+        role: event.arguments.role,
+      });
+    case 'removeRoleFromUser':
+      return await removeRoleFromUser({
         userId: event.arguments.userId,
         orgName: event.arguments.orgName,
         role: event.arguments.role,
@@ -57,7 +58,24 @@ async function addRoleToUser({
 }) {
   await models.user
     .patch({ userId, orgName })
-    .set({ roles: [role] })
+    .add({ roles: [role] })
+    .go();
+
+  return true;
+}
+
+async function removeRoleFromUser({
+  userId,
+  orgName,
+  role,
+}: {
+  userId: string;
+  orgName: string;
+  role: string;
+}) {
+  await models.user
+    .patch({ userId, orgName })
+    .delete({ roles: [role] })
     .go();
 
   return true;

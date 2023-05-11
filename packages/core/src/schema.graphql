@@ -12,4 +12,5 @@ type Query {
 
 type Mutation {
   addRoleToUser(orgName: String!, userId: String!, role: String!): Boolean
+  removeRoleFromUser(orgName: String!, userId: String!, role: String!): Boolean
 }

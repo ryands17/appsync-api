@@ -33,6 +33,7 @@ export function API({ stack }: sst.StackContext) {
       'Query hello': 'lambdaDs',
       'Query user': 'lambdaDs',
       'Mutation addRoleToUser': 'lambdaDs',
+      'Mutation removeRoleFromUser': 'lambdaDs',
     },
     cdk: {
       graphqlApi: {

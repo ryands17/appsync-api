@@ -1,5 +1,4 @@
 import * as models from '@appsync-api/core/models';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Handler } from 'aws-lambda';
 import { Config } from 'sst/node/config';
 import { gql, GraphQLClient } from 'graphql-request';
@@ -7,8 +6,6 @@ import fetch from 'node-fetch';
 
 const CLIENT_ID = Config.clientId;
 const CLIENT_SECRET = Config.clientSecret;
-
-const client = new DynamoDBClient({});
 
 const auth = `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString(
   'base64'
@@ -50,9 +47,6 @@ export const handler: Handler = async () => {
 };
 
 async function seedData() {
-  models.role.setClient(client);
-  models.user.setClient(client);
-
   await models.role
     .create({
       appName: 'my-app',

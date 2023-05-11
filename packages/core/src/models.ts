@@ -1,7 +1,9 @@
 import { Entity } from 'electrodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Config } from 'sst/node/config';
 
 const table = Config.tableName;
+const client = new DynamoDBClient({});
 
 export const role = new Entity(
   {
@@ -9,7 +11,7 @@ export const role = new Entity(
     attributes: {
       appName: { type: 'string', required: true },
       roleName: { type: 'string', required: true },
-      permissions: { type: 'list', items: { type: 'string' } },
+      permissions: { type: 'set', items: 'string' },
     },
     indexes: {
       role: {
@@ -22,7 +24,7 @@ export const role = new Entity(
       },
     },
   },
-  { table }
+  { table, client }
 );
 
 export const user = new Entity(
@@ -31,7 +33,7 @@ export const user = new Entity(
     attributes: {
       orgName: { type: 'string', required: true },
       userId: { type: 'string', required: true },
-      roles: { type: 'list', items: { type: 'string' } },
+      roles: { type: 'set', items: 'string' },
     },
     indexes: {
       user: {
@@ -44,5 +46,5 @@ export const user = new Entity(
       },
     },
   },
-  { table }
+  { table, client }
 );
